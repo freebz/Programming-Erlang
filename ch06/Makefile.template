@@ -1,0 +1,53 @@
+# 다음 줄들은 그대로 둘 것
+
+.SUFFIXES: .erl .beam .yrl
+
+.erl.beam:
+         erlc -W $<
+
+.yrl.erl:
+         erlc -W $<
+
+ERL = erl -boot start_clean
+
+# 컴파일 하려는 얼랭 모듈들의 목록이 옴
+# 오듈이 한 줄에 들어가지 않으면 줄 끝에 \문자를 추가하고
+# 다음 줄에 이어씀
+
+# // 아래에서부터 수정
+MODS = module1 module2 \
+       module3 ... special1 ...\
+       ...
+       moduleN
+
+# makefile에서는 첫 번째 타깃이 디폴트 타깃임.
+# 만약 그냥 "make"라고만 하면
+# "make all"이라고 가정됨("all"이 makefile의 첫 번째 카깃이기 때문임
+
+all: compile
+
+compile: ${MODS:%=%.beam} subdirs
+
+## 특수한 컴파일 요건들이 옴.
+
+special1.beam: special1.erl
+        ${ERL} -Dflag1 -W0 special1.erl
+
+## make 파일로부터 애플리케이션 실행
+
+application1: compile
+        ${ERL} -pa Dir1 -s application1 start Arg1 Arg2
+
+# 타킷 subdirs는 하위 디렉터리에 있는 모든 코드를 컴파일
+
+subdirs:
+        cd dir1; make
+	cd dir2; make
+	...
+
+# 모든 코드를 제거
+
+clean:
+        rm -rf *.beam erl_crash.dump
+	cd dir1; make clean
+	cd dir2; make clean
